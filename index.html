@@ -4,7 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Poster</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a1a1a;
+        }
+
+        #poster-canvas {
+            display: block;
+            touch-action: none;
+        }
+
+        #poster-canvas .letter {
+            cursor: grab;
+            touch-action: none;
+        }
+
+        #poster-canvas .letter.is-dragging {
+            cursor: grabbing;
+        }
+    </style>
 </head>
 <body>
     <svg id="poster-canvas" width="423" height="532" viewBox="0 0 423 532" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -44,6 +71,65 @@
         </clipPath>
         </defs>
         </svg>
-    <script type="module" src="main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/animejs@4.3.0/dist/bundles/anime.umd.min.js"></script>
+    <script>
+        const { animate, createDrawable, createDraggable } = anime;
+
+        const poster = document.getElementById('poster-canvas');
+        const sunRotor = document.getElementById('sun-rotor');
+        const sun = document.getElementById('sun');
+        const letters = document.querySelectorAll('#world .letter');
+
+        const HELLO_DRAW_MS = 750;
+        const SUN_ROTATION_MS = 8000;
+
+        function setSunTransformOrigin() {
+            const { x, y, width, height } = sun.getBBox();
+            const cx = x + width / 2;
+            const cy = y + height / 2;
+            sunRotor.style.transformOrigin = `${cx}px ${cy}px`;
+            sunRotor.style.transformBox = 'fill-box';
+        }
+
+        function startSunRotation() {
+            setSunTransformOrigin();
+            animate(sunRotor, {
+                rotate: '1turn',
+                duration: SUN_ROTATION_MS,
+                ease: 'linear',
+            });
+        }
+
+        function initHelloDraw() {
+            const drawables = createDrawable(['#hello-white', '#hello-blue']);
+
+            drawables.forEach((drawable) => {
+                drawable.draw = '0 0';
+            });
+
+            animate(drawables, {
+                draw: '0 1',
+                duration: HELLO_DRAW_MS,
+                ease: 'outExpo',
+                onComplete: startSunRotation,
+            });
+        }
+
+        function initLetterDrag() {
+            letters.forEach((letter) => {
+                createDraggable(letter, {
+                    container: poster,
+                    containerFriction: 1,
+                    releaseStiffness: 0,
+                    onGrab: () => letter.classList.add('is-dragging'),
+                    onRelease: () => letter.classList.remove('is-dragging'),
+                });
+            });
+        }
+
+        setSunTransformOrigin();
+        initHelloDraw();
+        initLetterDrag();
+    </script>
 </body>
 </html>
